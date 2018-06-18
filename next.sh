@@ -46,6 +46,28 @@ function task_body {
     fi
 }
 
+function task_frontmatter_key {
+    local file="$1"
+    local key="$2"
+
+    task_frontmatter "$file" | grep "$2" | sed -e 's/.*= *//'
+}
+
+function to_epoch {
+    date -juf '%Y-%m-%d' "$1" +%s
+}
+
+function next_date {
+    local file="$1"
+    local date="$(task_frontmatter_key "$file" next)"
+
+    if [ -z "$date" ]; then
+        echo "0"
+    else
+        to_epoch "$date"
+    fi
+}
+
 function all_todos {
     local file="$1"
 
@@ -67,8 +89,15 @@ function outstanding_todos {
 }
 
 function list_outstanding_todos {
+    local now=$(date +%s)
+
     for taskfile in $TASKS_DIR/*.task $TASKS_DIR/**/*.task; do
         local taskname="${taskfile#$TASKS_DIR/}"
+        local stamp=$(next_date "$taskfile")
+
+        if [ "$stamp" -gt "$now" ]; then
+            continue
+        fi
 
         echo "${taskname%.*}:"
         outstanding_todos "$taskfile" \
