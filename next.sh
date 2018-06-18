@@ -94,7 +94,11 @@ function list_outstanding_todos {
     for taskfile in $TASKS_DIR/*.task $TASKS_DIR/**/*.task; do
         local taskname="${taskfile#$TASKS_DIR/}"
         local stamp=$(next_date "$taskfile")
+        local arch=$(task_frontmatter_key "$taskfile" archived)
 
+        if [ -n "$arch" ]; then
+            continue
+        fi
         if [ "$stamp" -gt "$now" ]; then
             continue
         fi

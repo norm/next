@@ -48,6 +48,23 @@ For example:
     * [ ] Do another thing
 
 
+## Archiving tasks
+
+A task file can be archived by adding a key `archived` to the metadata,
+with a non-empty value. The value is ignored.
+
+For example:
+
+    ```
+    next = 2012-01-1
+    archived = true
+    ```
+
+    # Stuff.
+
+    * [ ] This is no longer a todo that will be surfaced.
+
+
 ## Installing
 
     make install
