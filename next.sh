@@ -56,9 +56,14 @@ function all_todos {
 function outstanding_todos {
     local file="$1"
 
+    # list all the open todos -- where the todos are nested, they
+    # are considered to be pre-requisites for completing the item
+    # they are nested under, so they are sorted first
     all_todos "$1" \
         | grep -E '^ *[*+-] +\[ \] +' \
-        | perl -nE 'm{^( *)[*+-] +\[ \] (.*)}; say $2;'
+        | perl -nE 'm{^( *)[*+-] +\[ \] (.*)}; say length($1), " ", $2;' \
+        | sort -s --reverse --numeric-sort --key=1 \
+        | cut -d' ' -f2-
 }
 
 function list_outstanding_todos {

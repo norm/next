@@ -24,6 +24,22 @@ For example:
     * [ ] Do a thing
     * [ ] Do another thing
 
+If a task contains subtasks (illustrated by indenting the following
+tasks), `next` will sort them before the parent task.
+
+For example, given a `thing.task` file:
+
+    * [ ] Do the thing
+        - [ ] Figure out the thing
+        - [ ] Plan how to do the thing
+
+`next` will output:
+
+    thing:
+        Figure out the thing
+        Plan how to do the thing
+        Do the thing
+
 
 ## Installing
 

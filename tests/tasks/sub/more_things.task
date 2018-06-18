@@ -8,6 +8,8 @@ Introductory paragraph.
 
 * another thing not to do
 * [ ] another thing to do
+    * [ ] before 'another thing', do this
+    * [ ] before 'another thing', do this too
 
 Bulleted lists do not have to start with an asterisk, plusses and dashes
 are also suitable markers.
