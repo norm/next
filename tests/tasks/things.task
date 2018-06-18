@@ -1,3 +1,8 @@
+```
+title = tricky
+* [ ] this is not a valid todo, because it is in the frontmatter
+```
+
 # Things
 
 Here is a list of things to do. Todos are bulleted list items that start

@@ -12,6 +12,18 @@ style of [GitHub Flavored Markdown][gfm] task lists.
 By default, the directory is `$HOME/Documents/next`, this can be
 overridden by setting the `NEXT_TASKS_DIR` environment variable.
 
+The task files can contain metadata, by prefacing the file with
+"front matter" -- a block surrounded by triple-backticks (```).
+
+For example:
+
+    ```
+    title = Things to do
+    ```
+
+    * [ ] Do a thing
+    * [ ] Do another thing
+
 
 ## Installing
 

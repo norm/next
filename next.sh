@@ -21,10 +21,36 @@ function ensure_tasks_dir {
     install -d $TASKS_DIR
 }
 
+function task_frontmatter {
+    local file="$1"
+
+    if head -1 "$file" | grep -q \`\`\`; then
+        awk '
+                /^```/ { t++; next; }
+                t == 1 { print; }
+            ' "$file"
+    fi
+}
+
+function task_body {
+    local file="$1"
+
+    # skip frontmatter if it is there
+    if head -1 "$file" | grep -q \`\`\`; then
+        awk '
+                /^```/ { t++; next }
+                t == 2 { print; }
+            ' "$file"
+    else
+        cat "$file"
+    fi
+}
+
 function all_todos {
     local file="$1"
 
-    grep -E '^ *[*+-] +\[[ xX]\] +' "$file"
+    task_body "$file" \
+        | grep -E '^ *[*+-] +\[[ xX]\] +'
 }
 
 function outstanding_todos {
@@ -46,4 +72,9 @@ function list_outstanding_todos {
     done
 }
 
-main
+
+if [ "$0" = "${BASH_SOURCE[0]}" ]; then
+    # run main if we are being executed as a script
+    # (rather then sourced, eg in tests or by advanced shell users)
+    main
+fi
