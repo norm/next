@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 TASKS_DIR="${NEXT_TASKS_DIR:=${HOME}/Documents/next}"
+TASKS_EXTENSION="${NEXT_TASK_EXT:=.task}"
 
 
 function main {
@@ -90,8 +91,9 @@ function outstanding_todos {
 
 function list_outstanding_todos {
     local now=$(date +%s)
+    local todos
 
-    for taskfile in $TASKS_DIR/*.task $TASKS_DIR/**/*.task; do
+    for taskfile in $TASKS_DIR/*${TASKS_EXTENSION} $TASKS_DIR/**/*${TASKS_EXTENSION}; do
         local taskname="${taskfile#$TASKS_DIR/}"
         local stamp=$(next_date "$taskfile")
         local arch=$(task_frontmatter_key "$taskfile" archived)
@@ -103,10 +105,13 @@ function list_outstanding_todos {
             continue
         fi
 
-        echo "${taskname%.*}:"
-        outstanding_todos "$taskfile" \
-            | sed -e 's/^/    /'
-        echo ''
+        todos=$(outstanding_todos "$taskfile")
+        if [ -n "$todos" ]; then
+            echo "${taskname%.*}:"
+            echo "$todos" \
+                | sed -e 's/^/    /'
+            echo ''
+        fi
     done
 }
 
