@@ -2,13 +2,21 @@
 
 TASKS_DIR="${NEXT_TASKS_DIR:=${HOME}/Documents/next}"
 TASKS_EXTENSION="${NEXT_TASK_EXT:=.task}"
+TIMEOUT_INTERVAL="${NEXT_TIMEOUT:=120}"
 
 
 function main {
     ensure_bash_version
     ensure_tasks_dir
 
-    list_outstanding_todos 
+    case "$1" in
+        committer)  git_committer ;;
+        *)          list_outstanding_todos ;;
+    esac
+}
+
+function status_line {
+    printf '\r%-79s\r' "$*"
 }
 
 function ensure_bash_version {
@@ -115,9 +123,56 @@ function list_outstanding_todos {
     done
 }
 
+function handle_file_changes {
+    # When a file has changed, sleep for a period then see if no further
+    # changes have been made (to avoid creating many tiny commits when
+    # actively editing notes). If no further changes have happened,
+    # commit and push the current state.
+
+    touch -t "$(date -r "$stamp" '+%Y%m%d%H%M.%S')" "$TIMESTAMP"
+
+    (
+        # run this part in a background subshell
+        # so we're not blocking on each change
+        sleep $TIMEOUT_INTERVAL
+
+        local new_stamp="$(stat -f'%a' "$TIMESTAMP")"
+        if [ $stamp = $new_stamp ]; then
+            local changes="$(git status --porcelain)"
+            if [ -n "$changes" ]; then
+                status_line
+                echo "$changes"
+                # FIXME not necessarily master?
+                git add . \
+                    && git commit -m"Autocommited by next at $(date)" \
+                    && git push origin master \
+                    && echo ''
+            else
+                status_line
+            fi
+        fi
+    ) &
+}
+
+function git_committer {
+    cd ${TASKS_DIR}
+    TIMESTAMP=$(mktemp)
+
+    while read stamp full_path; do
+        local path="${full_path##${TASKS_DIR}/}"
+
+        # don't try processing file changes that are to do with git
+        # (otherwise we'll enter a vicious circular mess)
+        if [[ $path != .git* ]]; then
+            status_line " -> $path"
+            handle_file_changes
+        fi
+    done < <(fswatch -t -f '%s' .)
+}
+
 
 if [ "$0" = "${BASH_SOURCE[0]}" ]; then
     # run main if we are being executed as a script
     # (rather then sourced, eg in tests or by advanced shell users)
-    main
+    main "$@"
 fi
