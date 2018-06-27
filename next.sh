@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 TASKS_DIR="${NEXT_TASKS_DIR:=${HOME}/Documents/next}"
-TASKS_EXTENSION="${NEXT_TASK_EXT:=.task}"
+TASKS_EXTENSION="${NEXT_TASK_EXT:=task}"
 TIMEOUT_INTERVAL="${NEXT_TIMEOUT:=120}"
 
 
@@ -101,10 +101,22 @@ function list_outstanding_todos {
     local now=$(date +%s)
     local todos
 
-    for taskfile in $TASKS_DIR/*${TASKS_EXTENSION} $TASKS_DIR/**/*${TASKS_EXTENSION}; do
+    local task_files=0
+    local todo_count=0
+
+    for taskfile in $TASKS_DIR/*.${TASKS_EXTENSION} $TASKS_DIR/**/*.${TASKS_EXTENSION}; do
         local taskname="${taskfile#$TASKS_DIR/}"
+
+        # skip if this is an unexpanded glob (no matching task files)
+        if [[ "$taskname" == "*.${TASKS_EXTENSION}"
+              || "$taskname" == "**/*.${TASKS_EXTENSION}"
+        ]]; then
+            continue
+        fi
+
         local stamp=$(next_date "$taskfile")
         local arch=$(task_frontmatter_key "$taskfile" archived)
+        let task_files++
 
         if [ -n "$arch" ]; then
             continue
@@ -115,12 +127,19 @@ function list_outstanding_todos {
 
         todos=$(outstanding_todos "$taskfile")
         if [ -n "$todos" ]; then
+            let todo_count++
             echo "${taskname%.*}:"
             echo "$todos" \
                 | sed -e 's/^/    /'
             echo ''
         fi
     done
+
+    if [ $task_files == 0 ]; then
+        echo "-- no .${TASKS_EXTENSION} files found in ${TASKS_DIR}."
+    elif [ $todo_count == 0 ]; then
+        echo "-- no todos found in $task_files file(s)."
+    fi
 }
 
 function handle_file_changes {
